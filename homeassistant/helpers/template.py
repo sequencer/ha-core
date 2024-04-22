@@ -697,15 +697,18 @@ class Template:
         **kwargs: Any,
     ) -> RenderInfo:
         """Render the template and collect an entity filter."""
+        existing_token = _render_info.get()
+        hass = self.hass
+        assert hass, "The hass object must be set"
         if (
-            self.hass
-            and self.hass.debug
-            and (loop_thread_ident := self.hass.loop.__dict__.get("_thread_ident"))
+            existing_token is not None
+            and hass
+            and (loop_thread_ident := hass.loop.__dict__.get("_thread_ident"))
             and loop_thread_ident != threading.get_ident()
         ):
             frame.report("calls async_render_to_info from a thread")
+
         self._renders += 1
-        assert self.hass and _render_info.get() is None
 
         render_info = RenderInfo(self)
 
