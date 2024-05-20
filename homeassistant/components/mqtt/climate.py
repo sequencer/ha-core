@@ -724,12 +724,15 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         def handle_action_received(msg: ReceiveMessage) -> None:
             """Handle receiving action via MQTT."""
             payload = self.render_template(msg, CONF_ACTION_TEMPLATE)
-            if not payload or payload == PAYLOAD_NONE:
+            if not payload:
                 _LOGGER.debug(
                     "Invalid %s action: %s, ignoring",
                     [e.value for e in HVACAction],
                     payload,
                 )
+                return
+            if payload == PAYLOAD_NONE:
+                self._attr_hvac_action = None
                 return
             try:
                 self._attr_hvac_action = HVACAction(str(payload))
@@ -777,8 +780,10 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             """Handle receiving listed mode via MQTT."""
             payload = self.render_template(msg, template_name)
 
-            if payload not in self._config[mode_list]:
-                _LOGGER.error("Invalid %s mode: %s", mode_list, payload)
+            if payload == PAYLOAD_NONE:
+                setattr(self, attr, None)
+            elif payload not in self._config[mode_list]:
+                _LOGGER.warning("Invalid %s mode: %s", mode_list, payload)
             else:
                 setattr(self, attr, payload)
 
@@ -833,8 +838,11 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         def handle_preset_mode_received(msg: ReceiveMessage) -> None:
             """Handle receiving preset mode via MQTT."""
             preset_mode = self.render_template(msg, CONF_PRESET_MODE_VALUE_TEMPLATE)
-            if preset_mode in [PRESET_NONE, PAYLOAD_NONE]:
+            if preset_mode == PRESET_NONE:
                 self._attr_preset_mode = PRESET_NONE
+                return
+            if preset_mode == PAYLOAD_NONE:
+                self._attr_preset_mode = None
                 return
             if not preset_mode:
                 _LOGGER.debug("Ignoring empty preset_mode from '%s'", msg.topic)

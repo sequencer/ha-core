@@ -63,6 +63,7 @@ from .const import (
     CONF_TEMP_STATE_TEMPLATE,
     CONF_TEMP_STATE_TOPIC,
     DEFAULT_OPTIMISTIC,
+    PAYLOAD_NONE,
 )
 from .debug_info import log_messages
 from .mixins import (
@@ -270,9 +271,20 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
         ) -> None:
             """Handle receiving listed mode via MQTT."""
             payload = self.render_template(msg, template_name)
+            if not payload.strip():  # No output from template, ignore
+                _LOGGER.debug(
+                    "Ignoring empty payload '%s' for attr '%s' "
+                    "after rendering for topic %s",
+                    payload,
+                    attr,
+                    msg.topic,
+                )
+                return
 
-            if payload not in self._config[mode_list]:
-                _LOGGER.error("Invalid %s mode: %s", mode_list, payload)
+            if payload == PAYLOAD_NONE:
+                setattr(self, attr, None)
+            elif payload not in self._config[mode_list]:
+                _LOGGER.warning("Invalid %s mode: %s", mode_list, payload)
             else:
                 setattr(self, attr, payload)
 
