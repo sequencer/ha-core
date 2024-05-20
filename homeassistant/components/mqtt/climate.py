@@ -838,11 +838,8 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         def handle_preset_mode_received(msg: ReceiveMessage) -> None:
             """Handle receiving preset mode via MQTT."""
             preset_mode = self.render_template(msg, CONF_PRESET_MODE_VALUE_TEMPLATE)
-            if preset_mode == PRESET_NONE:
+            if preset_mode in [PRESET_NONE, PAYLOAD_NONE]:
                 self._attr_preset_mode = PRESET_NONE
-                return
-            if preset_mode == PAYLOAD_NONE:
-                self._attr_preset_mode = None
                 return
             if not preset_mode:
                 _LOGGER.debug("Ignoring empty preset_mode from '%s'", msg.topic)
