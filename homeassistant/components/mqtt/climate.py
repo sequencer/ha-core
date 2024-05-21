@@ -724,7 +724,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         def handle_action_received(msg: ReceiveMessage) -> None:
             """Handle receiving action via MQTT."""
             payload = self.render_template(msg, CONF_ACTION_TEMPLATE)
-            if not payload:
+            if not payload.strip():  # No output from template, ignore
                 _LOGGER.debug(
                     "Invalid %s action: %s, ignoring",
                     [e.value for e in HVACAction],
