@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.components.climate import HVACMode
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_WRITE_ADDRESS,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_COUNT,
@@ -34,6 +35,7 @@ from .const import (
     CONF_FAN_MODE_VALUES,
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_ONOFF_REGISTER,
+    CONF_HVAC_ONOFF_WRITE_REGISTER,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_RETRIES,
@@ -183,9 +185,7 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
         try:
             size = struct.calcsize(structure)
         except struct.error as err:
-            raise vol.Invalid(
-                f"{name}: error in structure format --> {str(err)}"
-            ) from err
+            raise vol.Invalid(f"{name}: error in structure format --> {err!s}") from err
         bytecount = count * 2
         if bytecount != size:
             raise vol.Invalid(
